@@ -14,18 +14,32 @@ mov es, ax
 mov ss, ax
 mov sp, 0x7c00
 
-; 0xb800显示器内存
-mov ax, 0xb800
-mov ds, ax
-mov byte [0], 'H' ; [0]位置为字符，[1]为颜色设置
-mov byte [2], 'E'
-mov byte [4], 'L'
-mov byte [6], 'L'
-mov byte [8], 'O'
+; bochs魔术断点
+xchg bx, bx
 
+; 获取数据地址，调用打印函数
+mov si, booting
+call print
 
 ; 阻塞
 jmp $
+
+; 打印函数
+print:
+  mov ah, 0x0e  ; 中断0x10的参数之一，ah=0x0e表示在光标位置显示字符
+.next:
+  mov al, [si]  ; 中断0x10的参数之一，al指定了要显示的字符
+  cmp al, 0
+  jz .done
+  int 0x10
+  inc si
+  jmp .next
+.done:
+  ret
+  
+; 打印信息
+booting:
+  db "Hello world!!!", 10, 13, 0  ; \n\r
 
 times 510 - ($ - $$) db 0
 
